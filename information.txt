@@ -1,0 +1,3 @@
+firebase account ->
+  email: monymangmentapp@gmail.com
+  password: monymangmentapp2022

@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "326168404692",
+    "project_id": "moneymangement-b2f36",
+    "storage_bucket": "moneymangement-b2f36.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:326168404692:android:22c096cd2cd1452fe59141",
+        "android_client_info": {
+          "package_name": "com.demo.moneymanagement"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "326168404692-72vrk1aeg2oqhch86pbenqapfk2bs6u7.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA1KN0uKX4O_9njzfFB5NXAbyVjTyiy6Rc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "326168404692-72vrk1aeg2oqhch86pbenqapfk2bs6u7.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
