@@ -2,6 +2,7 @@ package com.demo.moneymanagement.presentation.screens.auth.signup
 
 import android.widget.ProgressBar
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -20,6 +21,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -33,8 +35,13 @@ import com.demo.moneymanagement.presentation.ui.theme.GreenColor
 @Composable
 fun SignupScreen(
     onNavigate: (NavigationDestination) -> Unit,
-    viewModel: SignupViewModel = hiltViewModel()
+    viewModel: SignupViewModel = hiltViewModel(),
+    onBack: () -> Unit,
 ) {
+    BackHandler {
+        viewModel.resetState()
+        onBack()
+    }
     ProgressBar(
         isShow = viewModel.state.value.isLoading,
         message = stringResource(id = R.string.loading),
@@ -44,6 +51,13 @@ fun SignupScreen(
     if (viewModel.state.value.error.isNotEmpty()) {
         LaunchedEffect(Unit) {
             Toast.makeText(context, viewModel.state.value.error, Toast.LENGTH_SHORT).show()
+        }
+    }
+    viewModel.state.value.data?.let {
+        LaunchedEffect(Unit) {
+            viewModel.resetState()
+
+            onNavigate(NavigationDestination.Home)
         }
     }
 
@@ -92,7 +106,9 @@ fun SignupScreen(
         CustomTextInput(
             hint = stringResource(id = R.string.your_salary),
             mutableState = salaryInput, modifier = Modifier.fillMaxWidth(),
-            isError = viewModel.salaryInput.value)
+            isError = viewModel.salaryInput.value,
+            keyboardType = KeyboardType.Number
+        )
 
         Spacer(modifier = Modifier.height(10.dp))
         TextInputsPassword(

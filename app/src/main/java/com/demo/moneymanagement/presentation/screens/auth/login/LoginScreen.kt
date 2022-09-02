@@ -1,6 +1,7 @@
 package com.demo.moneymanagement.presentation.screens.auth.login
 
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -33,8 +34,14 @@ import com.demo.moneymanagement.presentation.ui.theme.YeColor
 @Composable
 fun LoginScreen(
     onNavigate: (NavigationDestination) -> Unit,
-    viewModel: LoginViewModel = hiltViewModel()
+    viewModel: LoginViewModel = hiltViewModel(),
+    onBack: () -> Unit,
 ) {
+    BackHandler {
+        viewModel.resetState()
+        onBack()
+    }
+
     ProgressBar(
         isShow = viewModel.state.value.isLoading,
         message = stringResource(id = R.string.loading),
@@ -46,7 +53,13 @@ fun LoginScreen(
             Toast.makeText(context, viewModel.state.value.error, Toast.LENGTH_SHORT).show()
         }
     }
+    viewModel.state.value.data?.let {
+        LaunchedEffect(Unit) {
+            onNavigate(NavigationDestination.Home)
+            viewModel.resetState()
 
+        }
+    }
     Column(
         Modifier
             .fillMaxSize()
@@ -113,6 +126,8 @@ fun LoginScreen(
             modifier = Modifier.fillMaxWidth(),
             onClick = {
                 onNavigate(NavigationDestination.Signup)
+                viewModel.resetState()
+
             },
             colors = ButtonDefaults.buttonColors(YeColor),
             shape = RoundedCornerShape(8.dp)

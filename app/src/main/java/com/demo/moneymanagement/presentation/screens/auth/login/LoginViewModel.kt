@@ -3,16 +3,22 @@ package com.demo.moneymanagement.presentation.screens.auth.login
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.demo.moneymanagement.data.Constants
 import com.demo.moneymanagement.data.LoginRequest
 import com.demo.moneymanagement.data.RegistrarRequest
 import com.demo.moneymanagement.presentation.DataState
+import com.demo.preferences.general.GeneralGeneralPrefsStoreImpl
 import com.google.firebase.database.*
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class LoginViewModel @Inject constructor():ViewModel(){
+class LoginViewModel @Inject constructor(
+    private val generalGeneralPrefsStoreImpl: GeneralGeneralPrefsStoreImpl
+) : ViewModel() {
 
     private var databaseReference: DatabaseReference =
         FirebaseDatabase.getInstance().getReference("users")
@@ -31,13 +37,12 @@ class LoginViewModel @Inject constructor():ViewModel(){
 
     fun login(username: String, password: String) {
         _state.value = DataState()
-        _state.value = DataState(isLoading =  true)
+        _state.value = DataState(isLoading = true)
 
         isValidLoginRequest(username, password)?.let {
-            checkUserExist(username,password, userExit = {
-                _state.value = DataState(data =  true)
-
-
+            checkUserExist(username, password, userExit = {
+                saveData(it)
+                _state.value = DataState(data = true)
             }, userNotExit = {
                 _state.value = DataState(error = "Error Information !")
 
@@ -49,10 +54,10 @@ class LoginViewModel @Inject constructor():ViewModel(){
     }
 
     private fun checkUserExist(
-        username: String ,
+        username: String,
         password: String,
         userNotExit: () -> Unit,
-        userExit: () -> Unit,
+        userExit: (String) -> Unit,
         error: (String) -> Unit
     ) {
         databaseReference.addListenerForSingleValueEvent(object : ValueEventListener {
@@ -60,16 +65,13 @@ class LoginViewModel @Inject constructor():ViewModel(){
                 for (userSnap: DataSnapshot in snapshot.children) {
                     val user = userSnap.getValue(RegistrarRequest::class.java)
                     user?.let {
-                        if (it.username == username && it.password==password) {
-                            userExit()
-                            return
-                        } else {
-                            userNotExit()
+                        if (it.username == username && it.password == password) {
+                            userExit(it.id.toString())
                             return
                         }
                     }
-                    userNotExit()
                 }
+                userNotExit()
             }
 
             override fun onCancelled(error: DatabaseError) {
@@ -85,17 +87,20 @@ class LoginViewModel @Inject constructor():ViewModel(){
             _errorPassword.value = password.isEmpty()
             null
         } else
-            LoginRequest(username = email, password = password )
+            LoginRequest(username = email, password = password)
     }
 
-//    fun saveData(token: String, id:Int) {
-//        settings[Constants.USER_ID_KEY]=id
-//        TOKEN=token
-//        settings[TOKEN_KEY] = token
-//    }
+    private fun saveData(id: String) {
+        Constants.UserID=id
+        viewModelScope.launch {
+            generalGeneralPrefsStoreImpl.saveID(id)
+        }
+    }
 
     fun resetState() {
         _state.value = DataState()
+        _errorUsername.value=false
+        _errorPassword.value=false
         job?.cancel()
     }
 

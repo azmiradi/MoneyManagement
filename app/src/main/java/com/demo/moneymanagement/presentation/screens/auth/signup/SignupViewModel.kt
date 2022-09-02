@@ -3,18 +3,22 @@ package com.demo.moneymanagement.presentation.screens.auth.signup
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.demo.moneymanagement.data.Constants
 import com.demo.moneymanagement.data.RegistrarRequest
 import com.demo.moneymanagement.presentation.DataState
+import com.demo.preferences.general.GeneralGeneralPrefsStoreImpl
 import com.google.firebase.database.*
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class SignupViewModel @Inject constructor() :
+class SignupViewModel @Inject constructor(private val generalGeneralPrefsStoreImpl: GeneralGeneralPrefsStoreImpl) :
     ViewModel() {
     private var databaseReference: DatabaseReference =
-        FirebaseDatabase.getInstance().getReference("users")
+        FirebaseDatabase.getInstance().reference
 
     private var job: Job? = null
     private val _state = mutableStateOf(DataState<Boolean>())
@@ -50,21 +54,21 @@ class SignupViewModel @Inject constructor() :
         isValidRequest(email, password, confirmPassword, username, salary)?.let {
             job?.cancel()
             _state.value = DataState(isLoading = true)
-            val userID = databaseReference.push().key
+            val userID = databaseReference.child("users").push().key
             checkUserExist(username, email, userExit = {
                 _state.value = DataState(error = "user Alard Register with username or email!")
 
             }, userNotExit = {
-                databaseReference.child(userID.toString())
+                databaseReference.child("users").child(userID.toString())
                     .setValue(it.copy(id = userID))
                     .addOnFailureListener {
                         _state.value = DataState(error = it.message ?: "Something went wrong!")
                     }.addOnSuccessListener {
+                        saveData(userID.toString())
                         _state.value = DataState(data = true)
                     }
             }) {
                 _state.value = DataState(error = it)
-
             }
 
         }
@@ -73,22 +77,23 @@ class SignupViewModel @Inject constructor() :
     private fun checkUserExist(
         username: String, email: String,
         userNotExit: () -> Unit,
-        userExit: () -> Unit,
+        userExit: (String) -> Unit,
         error: (String) -> Unit
     ) {
         databaseReference.addListenerForSingleValueEvent(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
-                for (userSnap: DataSnapshot in snapshot.children) {
-                    val user = userSnap.getValue(RegistrarRequest::class.java)
-                    user?.let {
-                        if (it.email == email || it.username == username) {
-                            userExit()
-                            return
-                        } else {
-                            userNotExit()
-                            return
+                if (snapshot.hasChild("users")) {
+                    for (userSnap: DataSnapshot in snapshot.child("users").children) {
+                        val user = userSnap.getValue(RegistrarRequest::class.java)
+                        user?.let {
+                            if (it.email == email || it.username == username) {
+                                userExit(it.id.toString())
+                                return
+                            }
                         }
                     }
+                    userNotExit()
+                } else {
                     userNotExit()
                 }
             }
@@ -139,14 +144,21 @@ class SignupViewModel @Inject constructor() :
         }
     }
 
-//    fun saveData(token: String, id:Int) {
-//        settings[Constants.USER_ID_KEY]=id
-//        TOKEN=token
-//        settings[TOKEN_KEY] = token
-//    }
+    private fun saveData(id: String) {
+        Constants.UserID = id
+        viewModelScope.launch {
+            generalGeneralPrefsStoreImpl.saveID(id)
+        }
+    }
 
     fun resetState() {
         _state.value = DataState()
+        _errorEmail.value = false
+        _errorPassword.value = false
+        _usernameInput.value = false
+        _errorConfirmPassword.value = false
+        _salaryInput.value = false
+
         job?.cancel()
     }
 

@@ -6,5 +6,7 @@ data class RegistrarRequest(
     val password: String? = null,
     val salary: String? = null,
     val email: String? = null,
-    val id:String?=null,
+    val id: String? = null,
+    val reachAmount: String? = null,
+    var totalSpent: String? = null,
 )
