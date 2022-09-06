@@ -23,4 +23,9 @@
     <string name="select_category">Select category</string>
     <string name="total">Total</string>
     <string name="logout">Logout</string>
+    <string name="warning">Warning:</string>
+    <string name="expenses_that_exceed">Expenses that exceed the safe limit</string>
+    <string name="select_month">"Select Month "</string>
+    <string name="all_spend">All Spend Report</string>
+    <string name="comprehensive_report">Comprehensive report</string>
 </resources>

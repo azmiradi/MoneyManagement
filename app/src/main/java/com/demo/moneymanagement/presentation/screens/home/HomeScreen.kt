@@ -186,10 +186,21 @@ fun HomeScreen(
 
         Spacer(modifier = Modifier.height(25.dp))
 
-        ReportItem {
+        ReportItem(title=stringResource(id = R.string.monthly_report),
+        onClick = {
             onNavigate(NavigationDestination.MonthlyReport)
             viewModel.resetState()
-        }
+        })
+
+        Spacer(modifier = Modifier.height(25.dp))
+
+        Spacer(modifier = Modifier.height(10.dp))
+
+        ReportItem(title=stringResource(id = R.string.all_spend),
+            onClick = {
+                onNavigate(NavigationDestination.AllSpend)
+                viewModel.resetState()
+            })
 
         Spacer(modifier = Modifier.height(25.dp))
 
@@ -284,7 +295,7 @@ fun HomeScreen(
 }
 
 @Composable
-fun ReportItem(onClick: () -> Unit) {
+fun ReportItem(onClick: () -> Unit,title:String) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -304,7 +315,7 @@ fun ReportItem(onClick: () -> Unit) {
             )
             Spacer(modifier = Modifier.width(10.dp))
             Text(
-                text = stringResource(id = R.string.monthly_report),
+                text = title ,
                 fontSize = 13.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = Color.White,

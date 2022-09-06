@@ -1,4 +1,4 @@
-package com.demo.moneymanagement.presentation.screens.home.monthly_report
+package com.demo.moneymanagement.presentation.screens.home.spendDetails
 
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
@@ -7,6 +7,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -22,17 +24,16 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.demo.moneymanagement.R
 import com.demo.moneymanagement.presentation.NavigationDestination
 import com.demo.moneymanagement.presentation.ProgressBar
-import com.demo.moneymanagement.presentation.SampleSpinner
-import com.demo.moneymanagement.presentation.screens.home.spend.convertMonth
 import com.demo.moneymanagement.presentation.ui.theme.DividerColor
 import com.demo.moneymanagement.presentation.ui.theme.GreenColor
 import com.demo.moneymanagement.presentation.ui.theme.YaAlpha
+import kotlinx.coroutines.launch
 
 @Composable
-fun MonthlyReportScreen(
+fun SpendDetailsScreen(
     onBack: () -> Unit,
     onNavigate: (NavigationDestination) -> Unit,
-    viewModel: MonthlyReportViewModel = hiltViewModel(),
+    viewModel: SpendDetailsViewModel = hiltViewModel(),
 ) {
     BackHandler {
         viewModel.resetState()
@@ -50,13 +51,8 @@ fun MonthlyReportScreen(
         }
     }
 
-    val months = remember {
-        mutableStateListOf<String>()
-    }
     LaunchedEffect(Unit) {
-        months.clear()
-        months.addAll(viewModel.getMonths())
-
+        viewModel.getSpentData()
     }
 
     val spentList = remember {
@@ -65,6 +61,7 @@ fun MonthlyReportScreen(
     val totalSpent = remember {
         mutableStateOf(0)
     }
+
     viewModel.stateSpend.value.data?.let {
         LaunchedEffect(Unit) {
             spentList.value = it
@@ -103,14 +100,10 @@ fun MonthlyReportScreen(
             )
         }
         Spacer(modifier = Modifier.height(40.dp))
-        SampleSpinner(stringResource(id = R.string.select_month), list = months.map {
-            Pair(it.convertMonth(), it)
-        }) {
-            viewModel.getSpentData(it)
-        }
-        TotalCard(monthName = "August 2022", totalSpent = totalSpent.value.toString())
-        Spacer(modifier = Modifier.height(33.dp))
 
+        TotalCard(monthName = "All Spend", totalSpent = totalSpent.value.toString())
+        Spacer(modifier = Modifier.height(33.dp))
+        val coroutine = rememberCoroutineScope()
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
@@ -122,7 +115,16 @@ fun MonthlyReportScreen(
                 SpentItem(
                     categoryName = item.categoryName.toString(),
                     totalSpent = item.spent ?: "0"
-                )
+                ) {
+                    coroutine.launch {
+                        val result = viewModel.deleteSpend(item.id.toString())
+                        if (result) {
+                            viewModel.getSpentData()
+                        }else{
+                            Toast.makeText(context, "Error in Delete Spend", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                }
             }
         }
 
@@ -145,7 +147,10 @@ fun MonthlyReportScreen(
 }
 
 @Composable
-fun SpentItem(categoryName: String, totalSpent: String) {
+fun SpentItem(
+    categoryName: String, totalSpent: String,
+    onDelete: () -> Unit
+) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         backgroundColor = Color.Transparent,
@@ -173,6 +178,14 @@ fun SpentItem(categoryName: String, totalSpent: String) {
                 color = Color.Black,
                 modifier = Modifier.padding(end = 20.dp)
             )
+            IconButton(onClick = onDelete) {
+                Icon(
+                    imageVector = Icons.Default.Delete,
+                    contentDescription = "",
+                    tint = Color.Red
+                )
+            }
+
 
         }
 
@@ -203,7 +216,7 @@ fun TotalCard(monthName: String, totalSpent: String) {
                 verticalArrangement = Arrangement.Center
             ) {
                 Text(
-                    text = stringResource(id = R.string.monthly_report),
+                    text = stringResource(id = R.string.comprehensive_report),
                     fontWeight = FontWeight.Bold,
                     fontSize = 21.sp,
                     color = Color.White,

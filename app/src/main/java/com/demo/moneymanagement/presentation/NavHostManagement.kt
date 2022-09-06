@@ -1,8 +1,10 @@
 package com.demo.moneymanagement.presentation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.window.DialogProperties
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.dialog
 import androidx.navigation.compose.rememberNavController
 import com.demo.moneymanagement.presentation.screens.auth.login.LoginScreen
 import com.demo.moneymanagement.presentation.screens.auth.signup.SignupScreen
@@ -12,6 +14,7 @@ import com.demo.moneymanagement.presentation.screens.home.categories.CategoriesS
 import com.demo.moneymanagement.presentation.screens.home.monthly_report.MonthlyReportScreen
 import com.demo.moneymanagement.presentation.screens.home.monthly_report.MonthlyReportViewModel
 import com.demo.moneymanagement.presentation.screens.home.spend.AddSpendScreen
+import com.demo.moneymanagement.presentation.screens.home.spendDetails.SpendDetailsScreen
 
 @Composable
 fun NavHostManagement() {
@@ -40,21 +43,21 @@ fun NavHostManagement() {
         composable(NavigationDestination.Signup.destination) {
             SignupScreen(onNavigate = {
                 navController.navigate(it.destination)
-            },onBack = {
+            }, onBack = {
                 navController.popBackStack()
             })
         }
         composable(NavigationDestination.Home.destination) {
             HomeScreen(onNavigate = {
-                if (it==NavigationDestination.Login)
-                    navController.navigate(it.destination){
+                if (it == NavigationDestination.Login)
+                    navController.navigate(it.destination) {
                         popUpTo(NavigationDestination.Home.destination) {
                             inclusive = true
                         }
                     }
                 else
                     navController.navigate(it.destination)
-            },onBack = {
+            }, onBack = {
                 navController.popBackStack()
             })
         }
@@ -79,6 +82,23 @@ fun NavHostManagement() {
             }, onBack = {
                 navController.popBackStack()
             })
+        }
+
+        composable(NavigationDestination.AllSpend.destination) {
+            SpendDetailsScreen(onNavigate = {
+                navController.navigate(it.destination)
+            }, onBack = {
+                navController.popBackStack()
+            })
+        }
+
+        dialog(
+            NavigationDestination.WarningMoney.destination,
+            dialogProperties = DialogProperties(dismissOnBackPress = true)
+        ) {
+            WarningMoneyScreen {
+                navController.popBackStack()
+            }
         }
 
     }

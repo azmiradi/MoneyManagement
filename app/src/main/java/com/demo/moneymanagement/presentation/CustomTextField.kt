@@ -195,8 +195,9 @@ fun NormalTextFiled(
 
 @Composable
 fun SampleSpinner(
-    list: List<Category>,
-    onSelectionChanged: (selection: Category) -> Unit
+    hint: String,
+    list: List<Pair<String,String>>,
+    onSelectionChanged: (id:String) -> Unit
 ) {
 
     var selected by remember { mutableStateOf("") }
@@ -216,7 +217,7 @@ fun SampleSpinner(
                 onValueChange = { },
                 placeholder = {
                     Text(
-                        text = stringResource(id = R.string.select_category),
+                        text = hint,
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Normal
                     )
@@ -241,12 +242,12 @@ fun SampleSpinner(
                     DropdownMenuItem(
                         modifier = Modifier.fillMaxWidth(),
                         onClick = {
-                            onSelectionChanged(entry)
-                            selected = entry.name.toString()
+                            onSelectionChanged(entry.second)
+                            selected = entry.first
                             expanded = false
                         }) {
                         Text(
-                            text = (entry.name.toString()),
+                            text = (entry.first.toString()),
                             modifier = Modifier
                                 .wrapContentWidth()
                         )

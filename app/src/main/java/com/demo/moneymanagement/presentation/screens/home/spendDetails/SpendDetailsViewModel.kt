@@ -1,4 +1,4 @@
-package com.demo.moneymanagement.presentation.screens.home.monthly_report
+package com.demo.moneymanagement.presentation.screens.home.spendDetails
 
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
@@ -22,7 +22,7 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
 @HiltViewModel
-open class MonthlyReportViewModel @Inject constructor(
+open class SpendDetailsViewModel @Inject constructor(
     private val generalGeneralPrefsStoreImpl: GeneralGeneralPrefsStoreImpl
 ) : ViewModel() {
 
@@ -35,7 +35,7 @@ open class MonthlyReportViewModel @Inject constructor(
     val stateSpend: State<DataState<List<SpentDetails>>> = _stateSpend
 
 
-    fun getSpentData(month:String) {
+    fun getSpentData() {
         job?.cancel()
         _stateSpend.value = DataState()
         _stateSpend.value = DataState(isLoading = true)
@@ -45,27 +45,32 @@ open class MonthlyReportViewModel @Inject constructor(
                 databaseReference.child(it)
                     .addListenerForSingleValueEvent(object : ValueEventListener {
                         override fun onDataChange(snapshot: DataSnapshot) {
-
                             val spentDetailList: MutableList<SpentDetails> = ArrayList()
+
+                            val categories: MutableList<Category> = ArrayList()
                             if (snapshot.hasChild(CategoriesChild)) {
                                 for (data: DataSnapshot in snapshot.child(CategoriesChild).children) {
                                     val category = data.getValue(Category::class.java)
                                     category?.let {
-                                        spentDetailList.add(SpentDetails(it.id, it.name))
+                                        categories.add(category)
                                     }
                                 }
                             }
+
                             if (snapshot.child(SpendChild).hasChild(getMonth())) {
                                 val spentChild = snapshot.child(SpendChild)
-                                    .child(month).children
+                                    .child(getMonth()).children
                                 for (data: DataSnapshot in spentChild) {
                                     val spent = data.getValue(Spend::class.java)
-                                    spentDetailList.forEachIndexed { index, dataSpent ->
-                                        if (dataSpent.categoryID == spent?.categoryId) {
-                                            dataSpent.spent =
-                                                ((dataSpent.spent ?: "0").toInt() + (spent?.amount
-                                                    ?: "0").toInt()).toString()
-                                            spentDetailList[index] = dataSpent
+                                    categories.forEachIndexed { index, category ->
+                                        if (category.id == spent?.categoryId) {
+                                            val spentDetail = SpentDetails(
+                                                categoryID = category.id,
+                                                categoryName =category.name,
+                                                spent = spent?.amount,
+                                                id =spent?.id
+                                            )
+                                            spentDetailList.add(spentDetail)
 
                                         }
                                     }
@@ -93,35 +98,25 @@ open class MonthlyReportViewModel @Inject constructor(
         job?.cancel()
     }
 
-    suspend fun getMonths(): List<String> {
-        return suspendCoroutine {result->
+    suspend fun deleteSpend(spendID:String):Boolean{
+         return suspendCoroutine {result->
             generalGeneralPrefsStoreImpl.getID().onEach {
-                val months:MutableList<String> =ArrayList()
-                databaseReference.child(it)
-                    .child(SpendChild)
-                    .addListenerForSingleValueEvent(
-                        object : ValueEventListener {
-                            override fun onDataChange(snapshot: DataSnapshot) {
-                               for (data: DataSnapshot in snapshot.children){
-                                   months.add(data.key.toString())
-                               }
-                                result.resume(months)
-                            }
-
-                            override fun onCancelled(error: DatabaseError) {
-                                result.resume(months)
-                            }
-
-                        }
-                    )
+                databaseReference.child(it).child(SpendChild)
+                    .child(getMonth()).child(spendID).removeValue()
+                    .addOnSuccessListener {
+                        result.resume(true)
+                    }
+                    .addOnFailureListener{
+                        result.resume(false)
+                    }
             }.launchIn(viewModelScope)
         }
 
     }
-
-
 }
 
 data class SpentDetails(
-    val categoryID: String? = null, val categoryName: String? = null, var spent: String? = null
+    val categoryID: String? = null, val categoryName: String? = null, var spent: String? = null,
+    val id: String? = null
+
 )

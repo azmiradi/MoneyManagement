@@ -85,4 +85,7 @@ dependencies {
     // If using insets-ui
     implementation "com.google.accompanist:accompanist-insets-ui:0.24.1-alpha"
 
+    implementation 'com.rollbar:rollbar-java:1.+'
+    implementation 'com.rollbar:rollbar-android:1.+@aar'
+
 }

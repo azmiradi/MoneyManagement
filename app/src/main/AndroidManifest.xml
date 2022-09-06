@@ -13,6 +13,8 @@
         android:name=".presentation.App"
         android:theme="@style/Theme.MoneyManagement"
         tools:targetApi="31">
+        <meta-data android:name="com.rollbar.android.ACCESS_TOKEN"
+            android:value="85514db133c0402390cdc651762d3ae6" />
         <activity
             android:name=".presentation.MainActivity"
             android:exported="true"

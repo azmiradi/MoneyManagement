@@ -9,10 +9,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -30,7 +27,7 @@ import com.demo.moneymanagement.R
 import com.demo.moneymanagement.data.Category
 import com.demo.moneymanagement.presentation.*
 import com.demo.moneymanagement.presentation.ui.theme.GreenColor
-import com.demo.moneymanagement.presentation.ui.theme.YeColor
+import kotlinx.coroutines.launch
 
 @Composable
 fun AddSpendScreen(
@@ -43,15 +40,16 @@ fun AddSpendScreen(
         onBack()
     }
     ProgressBar(
-        isShow = viewModel.state.value.isLoading
+        isShow = viewModel.stateCategories.value.isLoading
                 || viewModel.stateAddAmount.value.isLoading,
         message = stringResource(id = R.string.loading),
         color = GreenColor,
     )
     val context = LocalContext.current
-    if (viewModel.state.value.error.isNotEmpty()) {
+    if (viewModel.stateCategories.value.error.isNotEmpty()) {
         LaunchedEffect(Unit) {
-            Toast.makeText(context, viewModel.state.value.error, Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, viewModel.stateCategories.value.error, Toast.LENGTH_SHORT)
+                .show()
         }
     }
 
@@ -63,13 +61,14 @@ fun AddSpendScreen(
     }
     LaunchedEffect(Unit) {
         viewModel.getCategories()
+        viewModel.getSpentData(getMonth())
     }
     val categories = remember {
         mutableStateOf(listOf<Category>())
     }
 
 
-    viewModel.state.value.data?.let {
+    viewModel.stateCategories.value.data?.let {
         LaunchedEffect(Unit) {
             categories.value = it
         }
@@ -80,20 +79,34 @@ fun AddSpendScreen(
     val amount = rememberSaveable() {
         mutableStateOf("")
     }
-
+    val currentMonth = rememberSaveable() {
+        mutableStateOf("")
+    }
     viewModel.stateAddAmount.value.data?.let {
         LaunchedEffect(Unit) {
             amount.value = ""
+            viewModel.getSpentData(getMonth())
             Toast.makeText(context, "Amount Added", Toast.LENGTH_SHORT).show()
         }
     }
 
-    if (viewModel.categoryInput.value){
+    if (viewModel.categoryInput.value) {
         LaunchedEffect(Unit) {
             Toast.makeText(context, "Select Category Please", Toast.LENGTH_SHORT).show()
         }
     }
 
+    viewModel.stateSpend.value.data?.let { spentList ->
+        LaunchedEffect(Unit) {
+            var total = 0
+            val saveMoney = viewModel.getSafeMoney()
+            spentList.forEach {
+                total += (it.spent ?: "0").toInt()
+            }
+            if (total > saveMoney)
+                onNavigate(NavigationDestination.WarningMoney)
+        }
+    }
     Column(
         Modifier
             .fillMaxSize()
@@ -138,8 +151,10 @@ fun AddSpendScreen(
 
 
 
-        SampleSpinner(list = categories.value) {
-            category.value = it.id.toString()
+        SampleSpinner(hint = stringResource(id = R.string.select_category),list = categories.value.map {
+            Pair(it.name ?: "", it.id ?: "")
+        }) {
+            category.value = it
         }
 
         Spacer(modifier = Modifier.height(20.dp))
@@ -150,7 +165,8 @@ fun AddSpendScreen(
                 .fillMaxWidth()
                 .padding(end = 16.dp, start = 16.dp),
             isError = viewModel.amountInput.value,
-            keyboardType = KeyboardType.Number)
+            keyboardType = KeyboardType.Number
+        )
 
 
         Spacer(modifier = Modifier.height(77.dp))

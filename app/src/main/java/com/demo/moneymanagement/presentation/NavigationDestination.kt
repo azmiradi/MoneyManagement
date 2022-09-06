@@ -8,5 +8,8 @@ enum class NavigationDestination(val destination: String) {
     Categories("categories"),
     AddSpend("addSpend"),
     MonthlyReport("monthlyReport"),
+    WarningMoney("warningMoney"),
+    AllSpend("allSpend"),
+
 
 }
