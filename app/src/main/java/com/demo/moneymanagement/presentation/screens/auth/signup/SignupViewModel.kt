@@ -84,13 +84,16 @@ class SignupViewModel @Inject constructor(private val generalGeneralPrefsStoreIm
             override fun onDataChange(snapshot: DataSnapshot) {
                 if (snapshot.hasChild("users")) {
                     for (userSnap: DataSnapshot in snapshot.child("users").children) {
-                        val user = userSnap.getValue(RegistrarRequest::class.java)
-                        user?.let {
-                            if (it.email == email || it.username == username) {
-                                userExit(it.id.toString())
-                                return
-                            }
-                        }
+                      if (userSnap.key != "reachAmount")
+                      {
+                          val user = userSnap.getValue(RegistrarRequest::class.java)
+                          user?.let {
+                              if (it.email == email || it.username == username) {
+                                  userExit(it.id.toString())
+                                  return
+                              }
+                          }
+                      }
                     }
                     userNotExit()
                 } else {

@@ -37,9 +37,8 @@ class LoginViewModel @Inject constructor(
 
     fun login(username: String, password: String) {
         _state.value = DataState()
-        _state.value = DataState(isLoading = true)
-
         isValidLoginRequest(username, password)?.let {
+            _state.value = DataState(isLoading = true)
             checkUserExist(username, password, userExit = {
                 saveData(it)
                 _state.value = DataState(data = true)
@@ -63,11 +62,13 @@ class LoginViewModel @Inject constructor(
         databaseReference.addListenerForSingleValueEvent(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 for (userSnap: DataSnapshot in snapshot.children) {
-                    val user = userSnap.getValue(RegistrarRequest::class.java)
-                    user?.let {
-                        if (it.username == username && it.password == password) {
-                            userExit(it.id.toString())
-                            return
+                    if (userSnap.key != "reachAmount"){
+                        val user = userSnap.getValue(RegistrarRequest::class.java)
+                        user?.let {
+                            if (it.username == username && it.password == password) {
+                                userExit(it.id.toString())
+                                return
+                            }
                         }
                     }
                 }

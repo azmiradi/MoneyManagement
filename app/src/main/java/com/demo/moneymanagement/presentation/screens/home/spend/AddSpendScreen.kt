@@ -104,7 +104,10 @@ fun AddSpendScreen(
                 total += (it.spent ?: "0").toInt()
             }
             if (total > saveMoney)
+            {
                 onNavigate(NavigationDestination.WarningMoney)
+            }
+
         }
     }
     Column(

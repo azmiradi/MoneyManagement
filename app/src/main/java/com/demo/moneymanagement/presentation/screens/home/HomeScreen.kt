@@ -122,7 +122,6 @@ fun HomeScreen(
                 )
             }
             Button(
-
                 onClick = {
                     onNavigate(NavigationDestination.Categories)
                     viewModel.resetState()
