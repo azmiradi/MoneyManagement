@@ -30,8 +30,7 @@ fun WarningMoneyScreen(onConfirm: () -> Unit) {
         shape = RoundedCornerShape(29.dp)
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
+            modifier = Modifier.fillMaxWidth()
                 .padding(37.dp, 37.dp)
         ) {
             Spacer(modifier = Modifier.height(48.dp))
